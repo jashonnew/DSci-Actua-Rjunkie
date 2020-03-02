@@ -102,7 +102,7 @@ g <- dat1 %>%
   scale_fill_manual(values = onion_col_add1) +
   #coord_cartesian(ylim = c(0, 335)) +
   theme( legend.position = "none") +
-  labs(title = "2019 Total Sales", y = "Dollars (in millions)", x = "Onion Type", subtitle = "1.105 Billion Dollars total") +
+  labs(title = "2018 Total Sales", y = "Dollars (in millions)", x = "Onion Type", subtitle = "1.105 Billion Dollars total") +
   coord_flip(ylim = c(0,350))#+
   #geom_col(aes(y = pppl, x = `BC SUB CATEGORY`))
 
@@ -120,12 +120,12 @@ h <- dat1 %>%
   the_dark_knight +
   scale_fill_manual(values = onion_col_add2) +
   theme( legend.position = "none") +
-  labs(title = "2018 Total Sales", y = "Dollars (in millions)", x = "Onion Type", subtitle = "1.189 Billion Dollars Total") +
+  labs(title = "2019 Total Sales", y = "Dollars (in millions)", x = "Onion Type", subtitle = "1.189 Billion Dollars Total") +
   coord_flip(ylim = c(0,350)) 
 
 #g / h
 
-onion_col_add3 <- c("green", "orange", "#F7EF43", "#F9ECC5", "skyblue", "#F560C3", "darkblue", "darkblue", "#F7F6F3", "darkblue")
+onion_col_add3 <- c("green", "orange", "#F7EF43", "#F9ECC5", "#F560C3", "skyblue", "darkblue", "darkblue", "#F7F6F3", "darkblue")
 
 i <- dat1 %>% 
   filter(!is.na(`GA $ Prior Yr`), !is.na(`GA $`)) %>% 
@@ -141,7 +141,7 @@ i <- dat1 %>%
   labs(title = "Increase in Total Sales from 2018 to 2019", y = "Dollars (in millions)", x = "Onion Type", subtitle = "83.1 Million Dollar Increase Total", color = "Onion Category") +
   coord_flip()
   
-(h / g) | i
+(g / h) | i
  
 
 dat2 <- dat1 %>% 
