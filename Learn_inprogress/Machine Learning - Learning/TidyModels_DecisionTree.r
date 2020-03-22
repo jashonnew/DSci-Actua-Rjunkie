@@ -1,4 +1,4 @@
-library(tidymodels, rattle)
+pacman::p_load(tidymodels, rattle)
 View(iris)
 
 set.seed(100)
