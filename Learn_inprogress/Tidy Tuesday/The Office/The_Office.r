@@ -1,7 +1,7 @@
 pacman::p_load(tidyverse, lubridate, ggrepel)
 
 
-dat <- read_csv("../../.Rdata/office.csv")
+dat <- read_csv("../../../.Rdata/office.csv")
 
 the_office <- theme(panel.background = element_rect(fill = "#391239"),    # This is my theme I will use 
                          plot.background = element_rect(fill = "#391239"),
