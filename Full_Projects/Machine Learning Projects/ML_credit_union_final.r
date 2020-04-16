@@ -2,7 +2,7 @@
 # devtools::install_github("Prometheus77/actools")
 
 
-## CREDIT TO AARON COOLEY, THIS AN ADAPTATION OF HIS ML TUTORIAL. SOME WAS ADDED AND REMOVED
+## CREDIT TO AARON COOLEY for the idea, Hig github above. THIS AN ADAPTATION OF HIS ML TUTORIAL. SOME WAS ADDED AND REMOVED, Lots was changed
 
 pacman::p_load(mlr, mlrMBO, tidyverse, here, glmnet, caret)
 here <- here::here()
