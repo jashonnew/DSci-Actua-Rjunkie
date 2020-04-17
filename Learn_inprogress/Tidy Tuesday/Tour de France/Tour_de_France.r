@@ -33,7 +33,7 @@ tdf_winners %>%
   geom_point( alpha = .6, color = "white") +
   geom_line(aes(group = winner_name), color = "#bf312a") +
   geom_text_repel(data = dat[c(-4,-5),], aes(label = winner_name), color =  "#bf312a", nudge_y = -4000, nudge_x = 1) +
-  labs(x = "Race Won (By Cyclist)", y = "Cumuative Distance of Races Won", title = "Lance Maintains the Unequivocal Lead") + 
+  labs(x = "Race Won (By Cyclist)", y = "Cumuative Distance of Races Won", title = "Steroids Can Make You Look Like a Real Champion") + 
   TDF +
   scale_x_continuous(breaks = c(1,2,3,4,5,6,7),labels = c("1st","2nd","3rd","4th","5th","6th","7th"))
 
