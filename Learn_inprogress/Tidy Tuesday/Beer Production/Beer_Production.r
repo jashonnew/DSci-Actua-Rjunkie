@@ -35,16 +35,21 @@ states <- us_states() %>%
   select(state,geometry)
   
 
-usdat <- left_join(states,beer_states, key = state) 
+usdat <- left_join(states,beer_states, key = state) %>% 
+  filter(year == 2019)
 
+my_breaks <- c(400,22000,1200000)
+my_labels <- c("400","22,000","1,200,000")
 
 usdat %>% 
   ggplot() +
-  geom_sf(aes(fill = log(barrels))) +
-  facet_wrap(~usdat$year, nrow = 3) +
-  scale_fill_gradient2(high = muted("blue"), low = "white") +
+  geom_sf(aes(fill = round(barrels, 3))) +
+  #facet_wrap(~usdat$year, nrow = 3) +
+  scale_fill_gradient2(high = muted("blue"), low = "white", trans = "log", breaks = my_breaks, labels = my_labels) +
                        #high = muted("red"), midpoint = 1000000, space = "Lab",
                        #na.value = "grey50", guide = "colourbar", aesthetics = "fill") +
   theme_bw() +
-  theme(axis.text = element_blank(), axis.ticks = element_blank()) +
-  labs(title = "Which States Make our Beer?", fill = "Barrels Produced")
+  geom_sf_text(aes(label = state), size = 3) +
+  #scale_fill_manual(labels = c("9000000","200000","3000","55")) +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), title = element_text(size = 10)) +
+  labs(title = "High Population Correlates with Beer Production; Though CO, MO, OH, WI and VA Stand Out.", fill = "Barrels Produced", subtitle = "2019")
