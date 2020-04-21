@@ -1,0 +1,170 @@
+---
+title: "Final Project"
+author: "Jashon Newlun"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: hide
+---
+
+# WW2 Weather - Predicting Maximum Temperature {.tabset .tabset-fade .tabset-pills}
+
+This data set was found from kaggle and has approximately 120k observations. These observations were taken in many different places during the WW2 period. precipitation, mean, min, and max temp, as well as wind speed and snowfall were all collected.
+
+## Model Selection
+
+I will take you through parts of the model selection, or what specifically I thought of while I was addressing the data. Typically, our final model would be put here bust because it turns out to be a loess curve, there is not a model to write. We are going to predict the high temperature for a day based on other variables.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ResourceSelection)
+library(mosaic)
+library(pander)
+library(ggthemes) 
+library(MASS)
+library(car)
+
+weainfo <- read_csv("../../data/Summary of Weather.csv")
+
+ww2 <- read.csv("../../data/Summary of Weather.csv", header = TRUE) %>% 
+  dplyr::select(-PoorWeather,-SNF,-SND,-FT,-FTI,-FB,-ITH,-TSHDSBRSGF,-SD3,-RHX,-RHN,-RVG,-WTE, -WindGustSpd, -SPD, -DR, -PGT) %>%
+  filter(PRCP != "T") %>% 
+  mutate(PRCP = as.numeric(PRCP))
+```
+
+It seems as though there may be a correlation between month and the high temp. 
+
+```{r warning = FALSE}
+#pairs(ww2[ ,1:5])
+keep <- sample(1:nrow(ww2),round(.02*nrow(ww2)))
+dat <- ww2[keep, ]
+pairs(dat)
+
+#Month seems to have strong quadrati relationship
+
+
+lm1 <- lm(MeanTemp ~ MO + I(MO^3), data = dat)
+b <- lm1$coefficients
+pander(summary(lm1))
+
+dat %>% 
+  ggplot(aes(x = MO, y = MeanTemp)) +
+  geom_point() +
+  stat_function(fun = function(x)(b[1] + b[2]*x + b[3]*x^3))
+```
+
+The month variable is very significant, and the graphic shows that there is reason to believe that one can use month to describe the data, however, our R^2 is quite low, and our prediction value is lacking because the variance is so large. Lets try adding year to the data. 
+
+```{r warning = FALSE}
+#year seems to have a quadratic relationship as well
+
+lm2 <- lm(MeanTemp ~ MO + I(MO^3) + I(YR^2), data = dat)
+pander(summary(lm2))
+
+#year doesnt seem to add anything significant. Lets try adding residuals to pairs
+```
+
+Year adds no value, lets take a look at another pairs plot in order to assess the value of the other variables mixed with those that have already been added. 
+
+```{r warning = FALSE}
+pairs(cbind(R = lm1$residuals, fit=lm1$fitted.values, dat))
+
+#PRCP needs Ts removed, shows quadratic relationship, month seems as though there is more curvature
+
+#dat <- dat %>% mutate(precip = as.numeric(precip))
+```
+
+PRCP or precipitation seems to be the only other variable besides other temperature measurements that shows a trend. Unfortunately, we would like to predict or create a model without other temperature variables, if possible, in order to predict the high temp without other temperature measurements.
+
+```{r warning = FALSE}
+
+lm3 <- lm(MeanTemp ~ MO + I(MO^2) + PRCP, data = dat)
+pander(summary(lm3))
+
+#PRCP also does not seem useful due to the p_value, we will add minimum temperature
+```
+
+The p-value tells us that PRCP is not useful. It seems as though the only decent predictor of the temperature was some version of the temperature. This could be useful if one wanted to know the high for the day and woke up at a particularly cold part of the night. Unfortunately month is no longer significant, so our final model will be quite simple, High temp predicted by the Minimum temp and month.
+
+
+```{r warning = FALSE}
+lm4 <- lm(MeanTemp ~ MO + I(MO^2) + MIN, data = dat)
+pander(summary(lm4))
+
+
+#It seems as though the only decent predictor of the temperature was some version of the temperature. This could be useful if one wanted to know the high for the day and woke up at a particularly cold part of the night. Unfortunately month is no longer significant, so our final model will be quite simple, High temp predicted by the Minimum temp.
+```
+
+Because month is no longer significant we will remove it from our model. Most likely, minimum temperature carries the month information within. 
+
+```{r warning = FALSE}
+lm5 <- lm(MeanTemp ~ MIN, data = dat)
+pander(summary(lm5))
+
+dat %>% 
+  ggplot(aes(y = MAX , x = MIN)) + 
+  geom_point(col = "skyblue3") +
+  stat_smooth(method = "lm", col = "purple1", level = .9) +
+  theme_stata()
+```
+
+The negative values dissuade a transformation, so we will move on to the diagnosis of fit and appropriateness for our model. 
+
+## Model Diagnosis
+
+```{r warning = FALSE}
+par(mfrow = c(1,3))
+plot(lm5, which = c(1:3,4,6))
+
+#Some outliers lead us to believe that there is reason to perform a robust regression 
+```
+
+Though our Residuals vs Fitted plot has quite a few strange outlines, we see mostly constant variance. There is a weird patterning due to the fat that the data is integer data, or non-continuous, but we can feel comfortable with our assumption of constant variance and a linear relation. 
+
+The QQ-plot shows a deviation from normality with a strong tailing, though normality is not necessary concerning with 120k data points. 
+
+The only patterning in our standardized residuals plot is due to the integer data. 
+
+Cooks distance shows the negative effects of the outlines that we discussed earlier. It seems as though this data has many cases of outlines which may unfairly sway or prediction model in a way that we do not want. In fact, let us return t model selection and instead employ a robust regression to try and explain our data. 
+
+## Return to Model Selection
+
+```{r warning = FALSE}
+myrlm <- rlm(MAX ~ MIN, data = dat)
+#pander(summary(myrlm))
+b <- myrlm$coefficients
+
+dat %>% 
+  ggplot(aes(y = MAX , x = MIN)) + 
+  geom_point(col = "skyblue3") +
+  geom_abline(slope = b[2], intercept = b[1], col = "purple") +
+  theme_stata()
+```
+
+Our eye can tell that clearly a robust regression is not the best for this data. There is much less data collected for cold days, and these days have unfair weight with the simple and now weight at all in the robust regression. It seems as though our best bet for prediction though this will kill interpret-ability, is the loess curve. Our final plot will be as follows:
+
+
+```{r warning = FALSE}
+#After some thought, it seems as though the robust line is not a good fit either. The robust line seems to miss the majority of the points in the middle of the blob. We are going to use a loess model as our final predicting model.
+
+myloess <- loess(MAX ~ MIN, data = ww2)
+
+ww2 %>% 
+  ggplot(aes(y = MAX , x = MIN)) + 
+  geom_point(col = "skyblue3") +
+  geom_smooth(col = "purple") +
+  theme_stata() +
+  labs(x = "Minimum Temp in Degrees F", y = "Maximum Temp degrees F", main = "Loess prediction of High temp based on Low")
+
+```
+
+## Model Prediction
+
+In order to show the prediction value of our model, we will create a prediction and confidence interval for the plot. We will also use the entire data set. We will predict the high temp for a day when the low temperature is 45 degrees Fahrenheit. In closing, the best predictor of maximum temperature was the minimum temperature. This is not particularly useful, and not interpretable because outliers forced us to adopt a loess model. 
+
+```{r}
+pander(predict(myloess, data.frame(MIN = 45), interval = "prediction"))
+pander(predict(myloess, data.frame(MIN = 45), interval = "confidence"))
+```
+
+**Model Validation not appropriate for this data due to the lacking nature of both the simple linear and the robust regression **
