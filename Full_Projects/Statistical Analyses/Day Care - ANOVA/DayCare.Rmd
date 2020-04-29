@@ -4,6 +4,7 @@ output:
   html_document:
     theme: cerulean
     code_folding: hide
+    keep_md: true
 ---
 
 <script type="text/javascript">
@@ -25,7 +26,7 @@ library(tidyverse)
 # "Session, Set working directory, To source file location"
 # Then click the green "play" arrow in 
 # the top right corner of this gray R-Chunk. 
-late <- read.csv("../../.RData/late.csv", header=TRUE)
+late <- read.csv("../../../.RData/late.csv", header=TRUE)
 # Then type:
 # > View(late)
 # in your R ConsoleVe
