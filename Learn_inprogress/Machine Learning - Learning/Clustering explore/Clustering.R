@@ -37,7 +37,17 @@ Fdat <- datsc %>%
   select(Frost)
 Fdist <- dist(as.matrix(Fdat))
 Fhc <- hclust(Fdist)
-ggdendrogram(Fhc, rotate = 1)
+ggdendrogram(Fhc, rotate = 1, size = .5)
+
+
+
+dhc <- as.dendrogram(Fhc)
+# Rectangular lines
+ddata <- dendro_data(dhc, type = "rectangle")
+p <- ggplot(segment(ddata)) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) + 
+  coord_flip() + 
+  scale_y_reverse(expand = c(0.2, 0))
 
 #K-means
 
@@ -55,6 +65,16 @@ clusplot(datsc, thisclus$cluster, color = TRUE, shade = TRUE, labels = 2, lines 
 clus6 <- kmeans(datsc, 6)
 clusplot(datsc, clus6$cluster, color = TRUE, shade = TRUE, labels = 2, lines =0)
 pander(clus6$cluster)
+
+
+cluster::clusplot(datsc, clus6$cluster, color = T, shade = T)
+
+pca_x = princomp(datsc)
+x_cluster = data.frame(pca_x$scores,clus6$cluster)
+
+ggplot(test, aes(x = Comp.1, y = Comp.2, color = as.factor(A.cluster), fill = as.factor(A.cluster))) + 
+  geom_point() + 
+  stat_ellipse(type = "t",geom = "polygon",alpha = 0.4)
 
 #New york texas and cali are clearly grouped 
 #due to poulation. Alaska is alone due to area, 
