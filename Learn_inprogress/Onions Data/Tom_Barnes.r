@@ -1,6 +1,6 @@
 pacman::p_load(tidyverse, lubridate, patchwork, forcats)
 
-dat1 <- read_csv("../.Rdata/US Onions.csv") %>% 
+dat1 <- read_csv("../../.Rdata/US Onions.csv") %>% 
   mutate(ppp = `GA $` /`GA EQ`, pppl = `GA $ Prior Yr` / `GA EQ Prior Yr`, date = ymd(Week))
 
 

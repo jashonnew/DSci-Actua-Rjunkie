@@ -1,0 +1,114 @@
+---
+title: "Simple Linear Regression"
+output: 
+  html_document:
+    theme: cerulean
+    code_folding: hide
+---
+
+
+<!-- Directions
+
+Come up with a simple linear regression of your own creation. 
+
+* Write the Background and clearly state your question. Then collect data and perform the linear regression analysis in order to answer your question. Use the proper order of first, ask the question, then second, figure out the answer.
+
+* You should collect both the quantitative response variable and the quantitative explanatory variable yourself. This can be data you collect from 
+    - the internet (like weather data, Facebook data, or sports data) 
+    - your own experiment 
+    - your own observational study
+* However,     
+    - The data should not be a single pre-existing dataset. It must be something that you piece together yourself.
+
+* You need at least $n=3$ $(X,Y)$ pairs to perform the regression. However, your regression will only be useful if you can get around $n=10$ or more observations.
+-->
+```{r, include=FALSE}
+# Be sure to use your file menus at the top of R-Studio to:
+# "Session -> Set working directory -> To source file location"
+# Then play this chunk and the next one to get the data into R.
+library(mosaic)
+library(car)
+library(DT)
+library(pander)
+library(readr)
+library(tidyverse)
+pennies <- read_csv("../../../Data/pennies.csv")
+```
+
+```{r, eval=FALSE}
+View(pennies)
+
+```
+
+
+
+## Background
+A sample of 721 pennies was taken. The measured elements incuded mass of a single penny, year of manufacture of the same, mint of the same, and condition of the same. A table of the data is presented below.
+
+```{r}
+datatable(pennies[,c("mass", "year", "mint", "condition")], extensions= 'Scroller', options=list(deferRender = TRUE, scrollY = 200, scroller = TRUE, dom = 't'))
+```
+
+In the process of data collection, those measuring began to wonder if there was some kind of mass to year relationship, and if there was, is the relationship linear? Though the answer to such a question has no useful answer(except to those carrying many pennies in their pockets), we will explore it.
+
+I took this data from my friends, those asking the questions, and decided to be the one to help them find their answer, an answer through linear regression. We will explore the data and it's relevance in regards to regression, as the regression requirements can be strict.
+
+## Analysis
+
+Using the year as the independent variable, and setting the mass as the dependent, we present our null hypothesis. In layman's terms, we assert that if there is no relationship between year and mass, then the slope of the regression line will be zero.
+$$
+  H_0: \beta_{\text{1}} = 0  
+$$
+
+$$
+H_a: \beta_{\text{1}} \neq 0 
+$$
+$$
+\alpha = 0.05
+$$
+
+As for the alternative hypothesis, we perform the test because we believe there to be some type of relationship, and as such believe there to be a slope.
+
+The results of the test are as follows:
+
+```{r}
+
+pfake.lm <- lm(mass~year, data=pennies)
+pander(summary(pfake.lm))
+
+plot(mass~year, data=pennies, col = "#C14D1B")
+abline(pfake.lm, col = "#1EA23A")
+```
+
+
+Our relationship definitely has a slope, and is extremely significant according to the P-value, but pre-interpretation let us examine our regression requirements
+
+1.      The regression relation between Y and X is linear.
+* For this we look to the Residuals vs. Fitted plot. A flat line shows a linear relationship, Ours looks like an upside-down mountain and cannot be assumed to be linear. 
+
+2.      The error terms are normally distributed with E{ϵi}=0.
+* For this we look at the QQ-Plot of the residuals. If the QQ plot is normal, than the error terms can be assumed normal. AS can be seen in the plot, large tails off of the ends and wavering in the middle show a lack of normal variance.
+
+3.      The variance of the error terms is constant over all X values.
+* Also shown by the Residuals vs. Fitted, ideally we want no pattern in the data. There are two large parallel slashes that defy constant variance. This also cannot be assumed.
+
+4.      The X values can be considered fixed and measured without error.
+* We are hopeful
+
+5.      The error terms are independent.
+* The Scale location plot shows us this, and under correct circumstances should also lack a pattern. Therefore independent errors cannot be assumed.
+
+```{r}
+par(mfrow = c(1,3))
+plot(pfake.lm, which=1:3)
+```
+
+##Interpretation
+
+We cannot determine much, seeing as only one of our requirements was met. Looking at the extreme P-values for the data, we can assume that the mass has gone down overall, but using our equation for prediction would be folly. This slope will continue to flatten out until the mass is once again changed for pennies. This data is however a good demonstration for necessity of requirements. The naked eye can tell you there is no linear relationship, but the P-value disagrees with much force. We can conclude that this data is not fit for regression. The only real knowledge we can have from looking at this analysis, is that the mass standard was changed somewhere about 1982.It is historically relevant to note that the copper to zinc ratio of the penny was changed in 1982.    
+
+
+
+
+
+
