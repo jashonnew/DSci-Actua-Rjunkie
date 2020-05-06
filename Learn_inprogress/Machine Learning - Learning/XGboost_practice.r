@@ -1,3 +1,6 @@
 pacman::p_load(mlr,mlrMBO,tidyverse)
 
-dat <- read_csv("../.RData/audit_data/auditrisk.csv")
+here::here()
+setwd(here::here())
+
+dat <- read_csv(".RData/audit_data/audit_risk.csv")
