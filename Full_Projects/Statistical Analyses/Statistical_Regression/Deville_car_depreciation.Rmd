@@ -1,0 +1,152 @@
+---
+title: "The Deville Went Down to Georgia"
+output: 
+  html_document:
+    theme: cerulean
+    code_folding: hide
+---
+
+<br>
+
+
+```{r, include=FALSE}
+# Be sure to download the CarPrices.csv file and save it
+# into your Data folder prior to knitting this file.
+library(mosaic)
+library(pander)
+library(car)
+library(DT)
+CarPrices <- read.csv("../Data/CarPrices.csv", header=TRUE)
+```
+
+## Background
+
+The `Cad` data set consists of 80 observations on Cadillacs. For each vehicle the selling price, mileage, and model, and Trim was recorded. A data table will be provided after our question is examined.
+
+Recently an analysis was performed on the data, relating the mileage to the selling price for all of the different Cadillac models. In order to show where our curiosity was spiked, the final graphic for their regression model is provided below.
+
+```{r, message=FALSE}
+Cad <- subset(CarPrices, Make=="Cadillac")
+Cad.lm <- lm(Price ~ Mileage*Model, data=Cad)
+palette(c("skyblue4","firebrick","skyblue","sienna1","gray","sienna4"))
+plot(Price ~ Mileage, data=Cad, pch=16, col=Cad$Model, xlim=c(0,50000), main="Price of Cadillacs")
+abline(Cad.lm$coef[1]               , Cad.lm$coef[2], col=palette()[1])
+abline(Cad.lm$coef[1]+Cad.lm$coef[3], Cad.lm$coef[2]+Cad.lm$coef[8], col=palette()[2])
+abline(Cad.lm$coef[1]+Cad.lm$coef[4], Cad.lm$coef[2]+Cad.lm$coef[9], col=palette()[3])
+abline(Cad.lm$coef[1]+Cad.lm$coef[5], Cad.lm$coef[2]+Cad.lm$coef[10], col=palette()[4])
+abline(Cad.lm$coef[1]+Cad.lm$coef[6], Cad.lm$coef[2]+Cad.lm$coef[11], col=palette()[5])
+abline(Cad.lm$coef[1]+Cad.lm$coef[7], Cad.lm$coef[2]+Cad.lm$coef[12], col=palette()[6])
+legend("topright",Cad.lm$xlevels$Model, lty=1, lwd=5, col=palette(), cex=0.7)
+```
+
+Though five of the six regression lines fit well, the Deville group line seems to be right in the middle of two different groups within the 'Deville' model. Our goal is to fit those lines, and find the factor that separates them. Here is the data table for the Devilles.
+
+```{r}
+Dev <- droplevels(subset(CarPrices, Model == "Deville"))
+
+datatable(Dev[,c("Price", "Mileage", "Make", "Model","Trim")], extensions= 'Scroller', options=list(deferRender = TRUE, scrollY = 200, scroller = TRUE, dom = 't'))
+```
+
+---------------------------------------------------------------------------------------
+
+
+Looking into the Deville model, it was found that the 2005 Deville came in three distinct Trims. According to the Caddyinfo website, DHS stands for Deville High-luxury, DTS stands for Deville Touring Sedan, and the third Trim is the base model.10 observations for each Trim are provided.
+
+According to the 'It Still Runs' website, there are slight differences in the specs of each Trim, here is a sample from the differences in the engines between Trims of the 2005 model:
+
+*According to specifications on MSN Autos, while both the DTS and DHS used the same 32-valve, 4.6-liter, Northstar V-8, the engines were slightly different in output. The DeVille DHS's 4.6-liter produced 275 horsepower at 5,600 rpm and 300 pound-feet of torque at 4,000 rpm. The DTS model's 4.6-liter produced 290 horsepower at 5,600 rpm and 285 pound-feet of torque at 4,400 rpm.*
+
+None of the other factors seem to be different enough to incur completely different regression models, So we will use Trim as our third factor and examine the three distinct Trims, according to how mileage can predict price.
+
+##Analysis
+
+Below is the null hypothesis for Multiple Regression. Further below is the regression model we will attempt to fit.
+
+$$
+  H_0: \beta_0 = \beta_1 = \beta_2 = \beta_3 = \beta_4 = 0
+$$
+
+$$
+  H_a: \beta_j \neq 0 \ \text{for at least one}\ j \in \{0,1,2,3,4\}
+$$
+
+
+$$
+\alpha = 0.05
+$$
+
+
+
+$$
+  Y_i = \beta_0 + \beta_1 \underbrace{X_{1i}}_{A} + \beta_2 \underbrace{X_{2i}}_{B} + \beta_3 \underbrace{X_{1i}X_{2i}}_{C} + \beta_4 \underbrace{X_{3i}}_{D} + \beta_5 \underbrace{X_{1i}X_{3i}}_{E} + \epsilon_i          
+$$
+A - Mileage(specifically for the DHS Sedan 4D Trim)
+
+B - DTS Sedan 4D Trim switch (all betas relating to this variable are specific to DTS Trim)
+
+C - Interaction of the Mileage variable and the DTS Trim Switch
+
+D - Standard Trim switch (all betas relating to this variable are specific to Standard Trim)
+
+E - Interaction of the Mileage variable and Standard Trim Switch 
+
+Now that the parameters of the test have been clearly laid out, we will perform the regression. Before looking at the model graphic, we will examine the P-values and the requirements for regression to see if all qualifications are met.
+
+
+```{r}
+Dev.lm <- lm(Price ~ Mileage + Trim + Mileage:Trim, data=Dev)
+pander(summary(Dev.lm))
+```
+
+Aside from the coefficient of the DTS intercept, or $\beta_2$ All coefficients are significant showing true difference in price according to mileage between the three Trims. Let us now examine the appropriateness of Regression.
+
+```{r}
+par(mfrow=c(1,3))
+plot(Dev.lm, which=1:3)
+```
+
+1. Linear Relation: the regression relation between Y and X is linear.
+ * This can be checked by the Residuals vs. Fitted diagnostic plot. Though there seems to be some deviation from the linear relationship line, it is negligible. 
+ 
+2. Normal Errors: the error terms are normally distributed with a mean of zero.
+ * The second plot or QQ Plot of the residuals checks this assumption. The tails seem to de-normalize, though compared to the length of the data, the variance isn't awful and can also be assumed to be appropriate.
+ 
+3. Constant Variance: the variance of the error terms is constant over all X values.
+ * This is also checked by the first diagnostic plot, and can be assumed true since no patterns show in the variance of residuals.
+ 
+4. Fixed X: the X values can be considered fixed and measured without error.
+ * This must be assumed true as we ourselves did not measure the data. 
+ 
+5. Independent Errors: the error terms are independent.
+ * Checked by the third diagnostic plot, the scale-location plot, patterns in the plot violate this assumption. Very little or no pattern shows in our plot. This can be assumed to be true.
+ 
+##Interpretation
+ 
+ Now that regression assumptions have been met and the P-values have been checked for significance, we will model our Regression, and then create a graphic to depict it. This will allow us to study the difference.
+ 
+ Here is our fitted model:
+ 
+ 
+$$
+  \hat{Y}_i = 46151 - 0.4281 X_{1i} - 1731 X_{2i} + .1246 X_{1i}X_{2i} - 8132 X_{3i} + .1621 X_{1i}X_{3i}
+$$
+
+Lastly, we interpret the plot. We can see that the intercept of the DTS Trim varies only slightly from the DHS Intercept, and that the intercept for DTS in comparison with all other values was insignificant. Though it's intercept was still included in the graphic, It is possible it should have been shifted upward. The slope was significant for DTS.
+
+```{r, warning=FALSE}
+palette(c("Red","Blue","Green"))
+
+plot(Price~Mileage, data=Dev, col   =Trim, pch=16, main="Deville Price according to Mileage")
+
+legend("topright", pch=1, col=palette(),legend=c("DHS Sedan 4D","DTS Sedan 4D","Sedan 4D (Standard)"), title="Trim", bty="n") 
+abline(Dev.lm, col = "Red")
+abline(46151-1731, -.4281+.1246, col="Blue")
+abline(46151-8132, -.4281+.1621, col="Green")
+```
+
+We can see in this model that the DHS trim depreciates the quickest, about 43 cents per mile. This makes sense as those willing to pay the money for the top model would rather buy a new car with the extra money. The demand for the used version of the High-luxury is just not as high. The DTS Trim loses about 30 cents per mile, and the Sedan loses about 26 cents per mile. The base cost of the DHS Trim was the most expensive at about 45000, with the DTS Trim being about 2000 less and the Sedan about 6500 under the DHS Trim.  
+
+It is clear now that there are three distinct and different lines for the Deville make, and the gap in the previous analysis, has been filled. Each of the Trims for the Cadillac Deville is significantly different in price, and relates to price differently in terms of mileage. Our evidence was beyond conclusive enough for us to reject the null, and it is shown that dynamic differences are present between regression lines.
+
+
+----------------------------------------------------------------------------------------
